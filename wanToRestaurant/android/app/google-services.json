@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "594956975659",
+    "project_id": "wantorest-v0-0-1",
+    "storage_bucket": "wantorest-v0-0-1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:594956975659:android:1cf860ba86f41c2c46346e",
+        "android_client_info": {
+          "package_name": "com.example.wantorestaurant_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCMrjWmv_v2TMx1lIUuonUsxzJpO2wNKg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

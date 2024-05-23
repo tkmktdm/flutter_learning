@@ -1,11 +1,15 @@
-// import 'package:firebase_core/firebase_core.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'firebase_options.dart';
-import 'dart:math';
-import 'package:flutter/cupertino.dart';
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:video_player/video_player.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:flutter_tts/flutter_tts_web.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 // page
 import 'test_page1.dart';
@@ -46,255 +50,255 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation _animation;
-  late PageController _pageController;
+class _MyHomePageState extends State<MyHomePage> {
+  String lastWords = '';
+  String lastError = '';
+  String lastStatus = '';
+  stt.SpeechToText speech = stt.SpeechToText();
+  // 音声入力開始
+  Future<void> _speak() async {
+    bool available = await speech.initialize(
+        onError: errorListener, onStatus: statusListener);
+    if (available) {
+      speech.listen(onResult: resultListener);
+    } else {
+      print("The user has denied the use of speech recognition.");
+    }
+  }
 
-  int _selectedIndex = 0;
+  // 音声入力停止
+  Future<void> _stop() async {
+    speech.stop();
+  }
 
-  // page
-  final _pages = [
-    TestPage1(),
-    TestPage2(),
-    TestPage3(),
-  ];
-
-  // play
-  _forward() async {
+  // リザルトリスナー
+  void resultListener(SpeechRecognitionResult result) {
     setState(() {
-      _animationController.forward();
+      lastWords = result.recognizedWords;
     });
   }
 
-  // stop
-  _stop() async {
+  // エラーリスナー
+  void errorListener(SpeechRecognitionError error) {
     setState(() {
-      _animationController.stop();
+      lastError = '${error.errorMsg} - ${error.permanent}';
     });
   }
 
-  // replay
-  _reverse() async {
+// ステータスリスナー
+  void statusListener(String status) {
     setState(() {
-      _animationController.reverse();
+      lastStatus = status;
     });
   }
 
-  // init
-  @override
-  void initState() {
-    super.initState();
-    _animationController =
-        AnimationController(vsync: this, duration: Duration(seconds: 1));
-    _animation = _animationController.drive(Tween(begin: 0.0, end: 2.0 * pi));
-    _pageController = PageController(initialPage: _selectedIndex);
-  }
+  // FlutterTts flutterTts = FlutterTts();
+  // final String _speakText = "こんにちは";
+  // // 読み上げ
+  // Future<void> _speak() async {
+  //   await flutterTts.setLanguage("ja-JP");
+  //   await flutterTts.setSpeechRate(1.0);
+  //   await flutterTts.setVolume(1.0);
+  //   await flutterTts.setPitch(1.0);
+  //   await flutterTts.speak(_speakText);
+  // }
+  // // 停止
+  // Future<void> _stop() async {
+  //   await flutterTts.stop();
+  // }
 
-  // destory
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
+  String _userAccelerometerValues = "";
+  String _gyroscopeValues = "";
 
-  void _onPageChanged(int index) {
+  String _latitude = "NoData";
+  String _longitude = "NoData";
+  String _altitude = "NoData";
+  String _distanceInMeters = "NoData";
+  String _bearing = "NoData";
+
+  Future<void> getLocation() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) return;
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
     setState(() {
-      _selectedIndex = index;
+      // 北緯がプラス、 南緯がマイナス
+      _latitude =
+          "緯度: ${position.latitude.toStringAsFixed(2)}"; // 東経がプラス、 西経がマイナス
+      _longitude = "経度: ${position.longitude.toStringAsFixed(2)}"; // 高度
+      _altitude =
+          "高度: ${position.altitude.toStringAsFixed(2)}"; // 距離を1000で割ってkmで返す(サンパウロとの距離) _distanceInMeters =
+      " 距離 :${(Geolocator.distanceBetween(position.latitude, position.longitude, -23.61, -46.40) / 1000).toStringAsFixed(2)}";
+      // 方位を返す(サンパウロとの方位) _bearing =
+      "方位: ${(Geolocator.bearingBetween(position.latitude, position.longitude, -23.61, -46.40)).toStringAsFixed(2)}";
     });
   }
 
-  bool _flag = false;
-  _click() async {
+  XFile? _image;
+  VideoPlayerController? _controller;
+  final imagePicker = ImagePicker();
+
+  Future getVideoFromCamera() async {
+    XFile? pickedFile = await imagePicker.pickVideo(source: ImageSource.camera);
+    if (pickedFile != null) {
+      _controller = VideoPlayerController.file(File(pickedFile.path));
+      _controller!.initialize().then((_) {
+        setState(() {
+          _controller!.play();
+        });
+      });
+    }
+  }
+
+  Future getVideoFromGallery() async {
+    XFile? pickedFile =
+        await imagePicker.pickVideo(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      _controller = VideoPlayerController.file(File(pickedFile.path));
+      _controller!.initialize().then((_) {
+        setState(() {
+          _controller!.play();
+        });
+      });
+    }
+  }
+
+  Future getImageFromCamera() async {
+    final pickedFile = await imagePicker.pickImage(source: ImageSource.camera);
     setState(() {
-      _flag = !_flag;
+      if (pickedFile != null) {
+        _image = XFile(pickedFile.path);
+      }
+    });
+  }
+
+  Future getImageFromGallery() async {
+    final pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      if (pickedFile != null) {
+        _image = XFile(pickedFile.path);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: PageView(
-            controller: _pageController,
-            onPageChanged: _onPageChanged,
-            children: _pages));
-    // return Scaffold(
-    //   appBar: AppBar(
-    //     title: const Row(children: [
-    //       Icon(Icons.create),
-    //       Text("Title"),
-    //     ]),
-    //   ),
-    //   body: Center(
-    //     child: AnimatedBuilder(
-    //       animation: _animation,
-    //       builder: (context, _) {
-    //         return Transform.rotate(
-    //             angle: _animation.value, child: Icon(Icons.cached, size: 100));
-    //       },
-    //     ),
-    //   ),
-    //   floatingActionButton:
-    //       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-    //     FloatingActionButton(
-    //         onPressed: _forward, child: Icon(Icons.arrow_forward)),
-    //     FloatingActionButton(onPressed: _stop, child: Icon(Icons.pause)),
-    //     FloatingActionButton(
-    //         onPressed: _reverse, child: Icon(Icons.arrow_back)),
-    //   ]),
-    //   drawer: const Drawer(
-    //     child: Center(
-    //       child: Text("Drawer"),
-    //     ),
-    //   ),
-    //   endDrawer: const Drawer(
-    //     child: Center(
-    //       child: Text("endDrawer"),
-    //     ),
-    //   ),
-    // );
+      appBar: AppBar(
+        title: Text("Title"),
+      ),
+      body: Center(
+          child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            ' 変換文字 :$lastWords',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          Text(
+            'ステータス : $lastStatus',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+        ],
+      )),
+      floatingActionButton:
+          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+        FloatingActionButton(
+            onPressed: _speak, child: const Icon(Icons.play_arrow)),
+        FloatingActionButton(onPressed: _stop, child: const Icon(Icons.stop)),
+      ]),
+      // body: Center(
+      //     child: Column(
+      //   mainAxisAlignment: MainAxisAlignment.center,
+      //   children: <Widget>[
+      //     Text(_speakText, style: Theme.of(context).textTheme.headlineMedium),
+      //   ],
+      // )),
+      // floatingActionButton:
+      //     Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+      //   FloatingActionButton(
+      //       onPressed: _speak, child: const Icon(Icons.play_arrow)),
+      //   FloatingActionButton(onPressed: _stop, child: const Icon(Icons.stop)),
+      // ]),
+      // body: Center(
+      //     child: Column(
+      //   mainAxisAlignment: MainAxisAlignment.center,
+      //   children: <Widget>[
+      //     Text(_userAccelerometerValues,
+      //         style: Theme.of(context).textTheme.headlineMedium),
+      //     Text(_gyroscopeValues,
+      //         style: Theme.of(context).textTheme.headlineMedium),
+      //   ],
+      // )),
+      // body: Center(
+      //     child: Column(
+      //   mainAxisAlignment: MainAxisAlignment.center,
+      //   children: <Widget>[
+      //     Text(_latitude, style: Theme.of(context).textTheme.headlineMedium),
+      //     Text(_longitude, style: Theme.of(context).textTheme.headlineMedium),
+      //     Text(_altitude, style: Theme.of(context).textTheme.headlineMedium),
+      //     Text(_distanceInMeters,
+      //         style: Theme.of(context).textTheme.headlineMedium),
+      //     Text(_bearing, style: Theme.of(context).textTheme.headlineMedium),
+      //   ],
+      // )),
+      // floatingActionButton: FloatingActionButton(
+      //     onPressed: getLocation, child: const Icon(Icons.location_on)),
+
+      // body: Center(
+      //     child: _image == null
+      //         ? Text('select picture',
+      //             style: Theme.of(context).textTheme.headlineLarge)
+      //         : Image.file(File(_image!.path))),
+      // floatingActionButton: (Row(
+      //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      //   children: [
+      //     FloatingActionButton(
+      //         onPressed: getImageFromCamera,
+      //         child: const Icon(Icons.photo_camera)),
+      //     FloatingActionButton(
+      //         onPressed: getImageFromGallery,
+      //         child: const Icon(Icons.photo_album)),
+      //   ],
+      // )),
+      // );
+      // body: Center(
+      //     child: _controller == null
+      //         ? Text('select picture',
+      //             style: Theme.of(context).textTheme.headlineLarge)
+      //         : VideoPlayer(_controller!)),
+      // floatingActionButton: (Row(
+      //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      //   children: [
+      //     FloatingActionButton(
+      //         onPressed: getVideoFromCamera,
+      //         child: const Icon(Icons.video_call)),
+      //     FloatingActionButton(
+      //         onPressed: getVideoFromGallery,
+      //         child: const Icon(Icons.movie_creation)),
+      //   ],
+      // )),
+    );
   }
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   userAccelerometerEvents.listen(
+  //     (UserAccelerometerEvent event) {
+  //       setState(() {
+  //         _userAccelerometerValues =
+  //             " 加速度センサー\n${event.x}\n${event.y}\n${event.z}";
+  //       });
+  //     },
+  //   );
+  //   gyroscopeEvents.listen(
+  //     (GyroscopeEvent event) {
+  //       setState(() {
+  //         _gyroscopeValues = "ジャイロセンサー\n${event.x}\n${event.y}\n${event.z}";
+  //       });
+  //     },
+  //   );
+  // }
 }
-
-// import 'package:firebase_core/firebase_core.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// // import 'firebase_options.dart';
-// import 'package:flutter/material.dart';
-
-// void main() {
-//   runApp(const MyApp());
-// }
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-
-//   // This widget is the root of your application.
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       debugShowCheckedModeBanner: false, // DEBUGバーナー非表示
-//       title: 'Flutter Demo',
-//       theme: ThemeData(
-//         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-//         useMaterial3: true,
-//       ),
-//       home: const MyHomePage(title: 'Flutter Demo Home Page'),
-//     );
-//   }
-// }
-
-// class MyHomePage extends StatefulWidget {
-//   const MyHomePage({super.key, required this.title});
-//   final String title;
-
-//   @override
-//   State<MyHomePage> createState() => _MyHomePageState();
-// }
-
-// class _MyHomePageState extends State<MyHomePage> {
-//   int _counter = 0;
-
-//   void _incrementCounter() {
-//     setState(() {
-//       _counter++;
-//       print('helloworld');
-//     });
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-//         title: Text(widget.title),
-//         actions: <Widget>[
-//           // overflow menu
-//           PopupMenuButton<Choice>(
-//             onSelected: (Choice choice) {
-//               // Selected Action
-//             },
-//             itemBuilder: (BuildContext context) {
-//               return loginList.map((Choice choice) {
-//                 return PopupMenuItem<Choice>(
-//                   value: choice,
-//                   child: Text(choice.title),
-//                 );
-//               }).toList();
-//               // return choices.map((Choice choice) {
-//               //   return PopupMenuItem<Choice>(
-//               //     value: choice,
-//               //     child: Text(choice.title),
-//               //   );
-//               // }).toList();
-//             },
-//           ),
-//         ],
-//         // actions: <Widget>[
-//         //   IconButton(
-//         //     icon: Icon(Icons.settings),
-//         //     onPressed: () {
-//         //       // Pressed Action
-//         //     },
-//         //   ),
-//         //   IconButton(
-//         //     icon: Icon(Icons.menu),
-//         //     onPressed: () {
-//         //       // Pressed Action
-//         //     },
-//         //   ),
-//         // ],
-//       ),
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: <Widget>[
-//             const Text(
-//               'You have pushed the button this many times:',
-//             ),
-//             Text(
-//               '$_counter',
-//               style: Theme.of(context).textTheme.headlineMedium,
-//             ),
-//           ],
-//         ),
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         onPressed: _incrementCounter,
-//         tooltip: 'Increment',
-//         child: const Icon(Icons.add),
-//       ), // This trailing comma makes auto-formatting nicer for build methods.
-//     );
-//   }
-// }
-
-// class Choice {
-//   const Choice({required this.title, required this.icon});
-//   final String title;
-//   final IconData icon;
-// }
-
-// const List<Choice> choices = const <Choice>[
-//   const Choice(title: 'Settings', icon: Icons.settings),
-//   const Choice(title: 'My Location', icon: Icons.my_location),
-// ];
-
-// const List<Choice> loginList = const <Choice>[
-//   const Choice(title: 'SignIn', icon: Icons.settings),
-//   const Choice(title: 'SignUp', icon: Icons.my_location),
-// ];
-
-// // const FirebaseSection {
-// //   await Firebase.initializeApp(
-// //     options: DefaultFirebaseOptions.currentPlatform,
-// //   );
-// // }
-
-// // FirebaseAuth.instance
-// //     .authStateChanges()
-// //     .listen((User? user) {
-// // if (user == null) {
-// // print('User is currently signed out!');
-// // } else {
-// // print('User is signed in!');
-// // }
-// // });

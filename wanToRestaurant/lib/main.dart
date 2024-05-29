@@ -26,29 +26,6 @@ import 'test_page1.dart';
 import 'test_page2.dart';
 import 'test_page3.dart';
 
-// 通知インスタンスの生成
-final FlutterLocalNotificationsPlugin flnp = FlutterLocalNotificationsPlugin();
-// バックグラウンドでメッセージを受け取った時のイベント
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  RemoteNotification? notification = message.notification;
-  flnp.initialize(const InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher')));
-  if (notification == null) {
-    return;
-  }
-  // 通知
-  flnp.show(
-    notification.hashCode,
-    "${notification.title}: バックグラウンド",
-    notification.body,
-    const NotificationDetails(
-        android: AndroidNotificationDetails(
-      'channel_id',
-      'channel_name',
-    )),
-  );
-}
-
 void main() async {
   await runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +37,6 @@ void main() async {
   }, (error, stackTrace) {
     FirebaseCrashlytics.instance.recordError(error, stackTrace);
   });
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   // 別コンポーネントのgoogle_mobile_adsを読み込む（広告表示）
   // MobileAds.instance.initialize();
   // カウンターアプリの場合 _MyHomePageStateクラスに以下を追記すると偶数の時に広告バナーが出る
@@ -99,57 +75,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // String _token = '';
-  // final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-
-  static FirebaseInAppMessaging fiam = FirebaseInAppMessaging.instance;
-  String _installId = '';
-
-  @override
-  void initState() {
-    super.initState();
-
-    // update_eventをトリガーする
-    fiam.triggerEvent('update_event');
-    FirebaseMessaging.instance.getToken().then((String? token) {
-      // token xxx:yyy のxxxの部分がインストールID
-      String installId = token!.split(':')[0];
-      setState(() {
-        _installId = installId;
-      });
-      print(installId);
-    });
-
-    // // アプリ初期化時に画面にトークン表示
-    // _firebaseMessaging.getToken().then((String? token) {
-    //   setState(() {
-    //     _token = token!;
-    //   });
-    //   print(token);
-    // });
-    // // フォアグラウンドでメッセージを受け取った時のイベント
-    // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    //   RemoteNotification? notification = message.notification;
-    //   flnp.initialize(const InitializationSettings(
-    //       android: AndroidInitializationSettings('@mipmap/ic_launcher')));
-    //   if (notification == null) {
-    //     return;
-    //   }
-    //   // 通知
-    //   flnp.show(
-    //     notification.hashCode,
-    //     "${notification.title}: フォアグラウンド ",
-    //     notification.body,
-    //     const NotificationDetails(
-    //       android: AndroidNotificationDetails(
-    //         'channel_id',
-    //         'channel_name',
-    //       ),
-    //     ),
-    //   );
-    // });
-  }
-
   Image? _img;
   Text? _text;
   // download
@@ -220,7 +145,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   child: const Text("Crash"),
                 ),
-                Text(_installId),
                 // Text(_token),
                 if (_img != null) _img!,
                 if (_text != null) _text!,

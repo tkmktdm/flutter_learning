@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('.parse() fails on invalid input', () {
-    expect(() => int.parse('X'), throewsFormatException);
+    expect(() => int.parse('X'), throwsFormatException);
   });
   setUpAll(() {
     print("テスト全体の事前処理");

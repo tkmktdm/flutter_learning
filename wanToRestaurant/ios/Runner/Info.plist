@@ -53,6 +53,21 @@
 	<key>NSMicrophoneUsageDescription</key> 
 	<string> マイクを利用する理由を記載 </string>
 
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.594956975659-o59npeptrglbldos1354a3q2th1kh5d1</string>
+			</array>
+			<key>NSPhotoLibraryUsageDescription</key>
+			<string> フォトライブラリを利用する理由を記載 </string>
+			<key>GADApplicationIdentifier</key>
+			<string>ca-app-pub-3940256099942544~1458002511</string>
+		</dict>
+	</array>
 
 </dict>
 </plist>

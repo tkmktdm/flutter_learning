@@ -12,7 +12,20 @@
           "package_name": "com.example.wantorestaurant_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "594956975659-h347252u06cc7t1pdbvhlaj7steat4dt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.wantorestaurant_app",
+            "certificate_hash": "dea443caeeb70eb1267ae5e0c561561d728c26ed"
+          }
+        },
+        {
+          "client_id": "594956975659-cradhd3rkqsm06ohn4sjnsqp0jn8me7d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCCMrjWmv_v2TMx1lIUuonUsxzJpO2wNKg"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "594956975659-cradhd3rkqsm06ohn4sjnsqp0jn8me7d.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "594956975659-o59npeptrglbldos1354a3q2th1kh5d1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.wantorestaurantApp"
+              }
+            }
+          ]
         }
       }
     }

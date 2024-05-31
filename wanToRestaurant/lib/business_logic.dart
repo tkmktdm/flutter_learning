@@ -28,8 +28,8 @@ class Coordinator {
   }
 }
 
-class Consumer {
-  Consumer(StreamController<String> stringStream) {
+class Consumers {
+  Consumers(StreamController<String> stringStream) {
     // StreamをListenしてデータが来たらターミナルに表示
     stringStream.stream.listen((data) async {
       print('consumer ${data} !!');

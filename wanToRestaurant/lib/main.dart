@@ -73,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     Generator(intStream);
     Coordinator(intStream, stringStream);
-    Consumer(stringStream);
+    Consumers(stringStream);
   }
 
   @override

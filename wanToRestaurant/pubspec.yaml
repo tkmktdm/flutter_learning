@@ -59,6 +59,10 @@ dependencies:
   url_launcher: ^6.1.4
   image_picker: ^0.8.5+3
 
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.19.0
+
 flutter_icons:
   android: true
   ios: true
@@ -86,6 +90,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # 自動生成フラグの有効化
+  generate: true
 
   # To add assets to your application, add an assets section, like this:
   # assets:

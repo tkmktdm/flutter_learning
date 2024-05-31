@@ -16,6 +16,14 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_in_app_messaging/firebase_in_app_messaging.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
+// 言語
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+// 独自
+import 'my_inherited_widget.dart';
+import 'my_widget.dart';
+
 // import 'dart:math';
 // import 'package:flutter/cupertino.dart';
 // import 'package:flutter/widgets.dart';
@@ -27,16 +35,16 @@ import 'test_page2.dart';
 import 'test_page3.dart';
 
 void main() async {
-  await runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
-    runApp(const MyApp());
-  }, (error, stackTrace) {
-    FirebaseCrashlytics.instance.recordError(error, stackTrace);
-  });
+  // await runZonedGuarded(() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  //   await Firebase.initializeApp(
+  //     options: DefaultFirebaseOptions.currentPlatform,
+  //   );
+  //   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+  //   runApp(const MyApp());
+  // }, (error, stackTrace) {
+  //   FirebaseCrashlytics.instance.recordError(error, stackTrace);
+  // });
   // 別コンポーネントのgoogle_mobile_adsを読み込む（広告表示）
   // MobileAds.instance.initialize();
   // カウンターアプリの場合 _MyHomePageStateクラスに以下を追記すると偶数の時に広告バナーが出る
@@ -51,6 +59,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        // ローカライゼーション設定
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        // サポート言語
+        supportedLocales: const [
+          Locale('ja', ''),
+          Locale('en', ''),
+        ],
         debugShowCheckedModeBanner: false, // DEBUGバーナー非表示
         title: 'Flutter Demo',
         theme: ThemeData(
@@ -75,96 +95,154 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Image? _img;
-  Text? _text;
-  // download
-  Future<void> _download() async {
-    // file download
-    FirebaseStorage storage = FirebaseStorage.instance;
-    Reference imageRef =
-        storage.ref().child('DL').child('flutter_dev_logo.png');
-    String imageUrl = await imageRef.getDownloadURL();
-    Reference textRef = storage.ref('DL/hello.txt');
-    var data = await textRef.getData();
-
-    // 画面に反映
+  int _counter = 0;
+  void _incrementCounter() {
     setState(() {
-      _img = Image.network(imageUrl);
-      _text = Text(ascii.decode(data!));
+      _counter++;
     });
-
-    // 画像ファイルをローカルに保存
-    Directory appDocDir = await getApplicationDocumentsDirectory();
-    File downloadToFile = File("${appDocDir.path}/download-logo.png");
-    try {
-      await imageRef.writeToFile(downloadToFile);
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  // upload処理
-  void _upload() async {
-    // image_pickerで画像選択
-    final pickerFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickerFile == null) return;
-    File file = File(pickerFile.path);
-    FirebaseStorage storage = FirebaseStorage.instance;
-    try {
-      await storage.ref('UL/upload-pic.png').putFile(file);
-      setState(() {
-        _img = null;
-        _text = const Text("UploadDone");
-      });
-    } catch (e) {
-      print(e);
-    }
+    print("count: ${_counter.toString()}");
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(title: Text(widget.title)),
-        body: Center(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              // ダウンロードしたイメージとテキストを表示
-              children: <Widget>[
-                ElevatedButton(
-                  onPressed: () {
-                    FirebaseCrashlytics.instance.log('ExceptionLog');
-                    throw Exception("MyException");
-                  },
-                  child: const Text("Throw Error"),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    FirebaseCrashlytics.instance.log('CrashLog');
-                    FirebaseCrashlytics.instance.crash();
-                  },
-                  child: const Text("Crash"),
-                ),
-                // Text(_token),
-                if (_img != null) _img!,
-                if (_text != null) _text!,
-              ]),
-        ),
-        floatingActionButton: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            FloatingActionButton(
-              onPressed: _download,
-              child: const Icon(Icons.download_outlined),
-            ),
-            FloatingActionButton(
-              onPressed: _upload,
-              child: const Icon(Icons.upload_outlined),
-            ),
-          ],
-        ));
+    return MyInheritedWidget(
+      counter: _counter,
+      message: "I am InheritedWidget",
+      child: Scaffold(
+          appBar: AppBar(title: Text(widget.title)),
+          body: const Center(child: MyWidget()),
+          floatingActionButton: FloatingActionButton(
+            onPressed: _incrementCounter,
+            child: const Icon(Icons.add),
+          )),
+    );
   }
 }
+
+
+// class _MyHomePageState extends State<MyHomePage> {
+//   // with WidgetsBindingObserver {
+//   //   @override
+//   //   void initState() {
+//   //     super.initState();
+//   //     WidgetsBinding.instance.addObserver(this);
+//   //   }
+//   //   @override
+//   //   void dispose() {
+//   //     super.dispose();
+//   //     WidgetsBinding.instance.removeObserver(this);
+//   //   }
+//   //   @override
+//   //   void didChangeAppLifecycleState(AppLifecycleState state) {
+//   //     print("stete = $state");
+//   //     switch (state) {
+//   //       case AppLifecycleState.inactive: print(' 非アクティブになった時の処理 '); break;
+//   //       case AppLifecycleState.paused: print(' 停止された時の処理 '); break;
+//   //       case AppLifecycleState.resumed: print(' 再開された時の処理 '); break;
+//   //       case AppLifecycleState.detached: print(' 破棄された時の処理 '); break;
+//   //     }
+//   //   }
+//   // }
+//   Image? _img;
+//   Text? _text;
+//   // download
+//   Future<void> _download() async {
+//     // file download
+//     FirebaseStorage storage = FirebaseStorage.instance;
+//     Reference imageRef =
+//         storage.ref().child('DL').child('flutter_dev_logo.png');
+//     String imageUrl = await imageRef.getDownloadURL();
+//     Reference textRef = storage.ref('DL/hello.txt');
+//     var data = await textRef.getData();
+
+//     // 画面に反映
+//     setState(() {
+//       _img = Image.network(imageUrl);
+//       _text = Text(ascii.decode(data!));
+//     });
+
+//     // 画像ファイルをローカルに保存
+//     Directory appDocDir = await getApplicationDocumentsDirectory();
+//     File downloadToFile = File("${appDocDir.path}/download-logo.png");
+//     try {
+//       await imageRef.writeToFile(downloadToFile);
+//     } catch (e) {
+//       print(e);
+//     }
+//   }
+
+//   // upload処理
+//   void _upload() async {
+//     // image_pickerで画像選択
+//     final pickerFile =
+//         await ImagePicker().pickImage(source: ImageSource.gallery);
+//     if (pickerFile == null) return;
+//     File file = File(pickerFile.path);
+//     FirebaseStorage storage = FirebaseStorage.instance;
+//     try {
+//       await storage.ref('UL/upload-pic.png').putFile(file);
+//       setState(() {
+//         _img = null;
+//         _text = const Text("UploadDone");
+//       });
+//     } catch (e) {
+//       print(e);
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//         appBar: AppBar(title: Text(widget.title)),
+//         body: Center(
+//           child: Column(
+//               mainAxisAlignment: MainAxisAlignment.center,
+//               // ダウンロードしたイメージとテキストを表示
+//               children: <Widget>[
+//                 // 言語設定に合わせた文字
+//                 Text(
+//                   AppLocalizations.of(context)!.hello('kazutxt'),
+//                 ),
+//                 Text(
+//                   AppLocalizations.of(context)!.allow,
+//                 ),
+//                 Text(
+//                   AppLocalizations.of(context)!.deny,
+//                 ),
+//                 ElevatedButton(
+//                   onPressed: () {
+//                     FirebaseCrashlytics.instance.log('ExceptionLog');
+//                     throw Exception("MyException");
+//                   },
+//                   child: const Text("Throw Error"),
+//                 ),
+//                 ElevatedButton(
+//                   onPressed: () {
+//                     FirebaseCrashlytics.instance.log('CrashLog');
+//                     FirebaseCrashlytics.instance.crash();
+//                   },
+//                   child: const Text("Crash"),
+//                 ),
+//                 // Text(_token),
+//                 if (_img != null) _img!,
+//                 if (_text != null) _text!,
+//               ]),
+//         ),
+//         floatingActionButton: Row(
+//           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//           children: [
+//             FloatingActionButton(
+//               onPressed: _download,
+//               child: const Icon(Icons.download_outlined),
+//             ),
+//             FloatingActionButton(
+//               onPressed: _upload,
+//               child: const Icon(Icons.upload_outlined),
+//             ),
+//           ],
+//         ));
+//   }
+// }
 
 
 // class _MyHomePageState extends State<MyHomePage> {

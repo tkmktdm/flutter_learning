@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:core';
+import 'package:provider/provider.dart';
 
 // 言語
 import 'package:flutter_localizations/flutter_localizations.dart';

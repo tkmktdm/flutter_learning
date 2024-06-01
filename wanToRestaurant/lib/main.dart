@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:core';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 // 言語
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -64,22 +65,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var intStream = StreamController<int>();
-  var stringStream = StreamController<String>.broadcast();
-
-  @override
-  void initState() {
-    super.initState();
-    Generator(intStream);
-    Coordinator(intStream, stringStream);
-    Consumer(stringStream);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    intStream.close();
-    stringStream.close();
+  int _counter = 0;
+  void _incrementCounter() {
+    setState(() {
+      _counter++;
+    });
+    print("count: ${_counter.toString()}");
   }
 
   @override
@@ -88,22 +79,46 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text("You have pushed the button this many times"),
-            StreamBuilder<String>(
-              stream: stringStream.stream,
-              initialData: "",
-              builder: (context, snapshot) {
-                return Text('${snapshot.data}',
-                    style: Theme.of(context).textTheme.bodyMedium);
-              },
-            ),
-          ],
-        ),
+      body: MultiProvider(
+        providers: [
+          Provider<int>.value(
+            value: _counter,
+          ),
+          Provider<String>.value(
+            value: "Provider.",
+          )
+        ],
+        child: const Center(child: MyWidget()),
       ),
+      floatingActionButton: FloatingActionButton(
+          onPressed: _incrementCounter,
+          tooltip: "Increment",
+          child: const Icon(Icons.add)),
     );
   }
 }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text(widget.title),
+//       ),
+//       body: Provider<int>.value(
+//         value: _counter,
+//         child: const Center(
+//           child: MyWidget(),
+//           // child: Consumer<int>(
+//           //     builder: (context, value, _) => Text(
+//           //           "consume: $value",
+//           //           style: Theme.of(context).textTheme.bodyMedium,
+//           //         )),
+//         ),
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//           onPressed: _incrementCounter,
+//           tooltip: "Increment",
+//           child: const Icon(Icons.add)),
+//     );
+//   }
+// }

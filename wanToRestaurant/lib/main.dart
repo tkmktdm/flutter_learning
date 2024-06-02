@@ -11,6 +11,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'business_logic.dart';
 import 'my_inherited_widget.dart';
 import 'my_widget.dart';
+import 'my_data.dart';
+import 'my_slider.dart';
 
 // page
 import 'test_page1.dart';
@@ -65,35 +67,23 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-    print("count: ${_counter.toString()}");
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
+    return ChangeNotifierProvider(
+      create: (BuildContext context) => MyData(),
+      child: Scaffold(
+        appBar: AppBar(title: Text(widget.title)),
+        body: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Consumer<MyData>(
+              builder: (context, mydata, _) => Text(
+                    // mydata.value.toStringAsFixed(2),
+                    context.select(
+                        (MyData mydata) => mydata.value.toStringAsFixed(2)),
+                    style: const TextStyle(fontSize: 100),
+                  )),
+          const MySlider(),
+        ]),
       ),
-      body: MultiProvider(
-        providers: [
-          Provider<int>.value(
-            value: _counter,
-          ),
-          Provider<String>.value(
-            value: "Provider.",
-          )
-        ],
-        child: const Center(child: MyWidget()),
-      ),
-      floatingActionButton: FloatingActionButton(
-          onPressed: _incrementCounter,
-          tooltip: "Increment",
-          child: const Icon(Icons.add)),
     );
   }
 }

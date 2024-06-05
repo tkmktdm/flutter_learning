@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'my_data.dart';
+import 'mydata.dart';
 
 // class MySlider extends StatefulWidget {
 //   const MySlider({Key? key}) : super(key: key);

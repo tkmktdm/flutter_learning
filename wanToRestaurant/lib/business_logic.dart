@@ -28,11 +28,23 @@ class Coordinator {
   }
 }
 
-class Consumers {
-  Consumers(StreamController<String> stringStream) {
-    // StreamをListenしてデータが来たらターミナルに表示
+// Consumerクラス
+// データの利用を担当する
+class Consumer {
+  // コンストラクタでString型のStreamを受け取る
+  Consumer(StreamController<String> stringStream) {
+    // Streamをlistenしてデータが来たらターミナルに表示する
     stringStream.stream.listen((data) async {
-      print('consumer ${data} !!');
+      print("Consumer が $data を使ったよ ");
     });
   }
 }
+
+// class Consumers {
+//   Consumers(StreamController<String> stringStream) {
+//     // StreamをListenしてデータが来たらターミナルに表示
+//     stringStream.stream.listen((data) async {
+//       print('consumer ${data} !!');
+//     });
+//   }
+// }
